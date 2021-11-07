@@ -7,6 +7,7 @@ import warnings
 
 from ..problems import RiskMinimization
 from ..solvers import Solver, EqualProportion
+from ..triggers import Trigger, RegularBasis
 from ..utils import calc_asset_obsrvd_returns, calc_asset_obsrvd_risks, calc_prtfl_obsrvd_return, calc_prtfl_obsrvd_risk
 
 warnings.filterwarnings("ignore")
@@ -39,10 +40,11 @@ class Simulation(object):
         init_prtfl_valtn = 100.0
         window_day = 28
         min_reblncng_intrvl_day = 1
-        reblncng_intrvl_day = 28
 
         params = {}
+        params["reblncng_intrvl_day"] = 28
         params["return_lower_qntl"] = 0.7
+        trigger = Trigger(RegularBasis(**params))
         problem = RiskMinimization(**params)
         solver = Solver(EqualProportion(**params))
 
@@ -63,10 +65,7 @@ class Simulation(object):
             crnt_prices = self._prices[oldest_time:latest_time]
 
             # Assess the necessity of rebalancing.
-            if len(reblncng_time_list) > 0:
-                is_reblncng = reblncng_time_list[-1] + timedelta(days=reblncng_intrvl_day) <= crnt_time
-            else:
-                is_reblncng = True
+            is_reblncng = trigger.assess(crnt_time=crnt_time, reblncng_time_list=reblncng_time_list)
             if not is_reblncng:
                 crnt_time += timedelta(days=min_reblncng_intrvl_day)
                 continue
