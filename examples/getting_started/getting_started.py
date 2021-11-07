@@ -19,10 +19,15 @@ def main():
 
     result_dir = os.path.join(os.path.dirname(os.path.normpath(__file__)), "results", "risk_ep")
     sim = Simulation(
+        trigger_class="regular_basis",
+        problem_class="risk_minimization",
+        solver_class="equal_proportion",
         prices=prices,
         start_time=start_time,
         end_time=end_time,
         result_dir=result_dir,
+        return_lower_qntl=0.7,
+        reblncng_intrvl_day=28,
     )
     sim.execute()
 

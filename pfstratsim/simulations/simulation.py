@@ -18,6 +18,15 @@ class Simulation(object):
 
     Parameters
     ----------
+    trigger_class : {"regular_basis", "identical_distribution_test"}
+        The class of trigger used in the simulation.
+
+    problem_class : {"risk_minimization", "sharp_ratio_maximization"}
+        The class of problem used in the simulation.
+
+    solver_class : {"equal_proportion", "mathematical_programming}
+        The class of solver used in the simulation.
+
     prices : DataFrame of shape (num_times, num_assets) and float
         The historical prices of the assets.
 
@@ -42,7 +51,7 @@ class Simulation(object):
     params : dict
         The other parameters of the trigger, the problem and the solver.
     """
-    def __init__(self, prices, start_time, end_time, init_prtfl_valtn=100.0,
+    def __init__(self, trigger_class, problem_class, solver_class, prices, start_time, end_time, init_prtfl_valtn=100.0,
                  window_day=28, min_reblncng_intrvl_day=1, result_dir=".", **params):
         self._prices = prices
         self._start_time = start_time
@@ -51,6 +60,9 @@ class Simulation(object):
         self._window_day = window_day
         self._min_reblncng_intrvl_day = min_reblncng_intrvl_day
         self._result_dir = result_dir
+        self._trigger_class = trigger_class
+        self._problem_class = problem_class
+        self._solver_class = solver_class
         self._params = params
 
     def execute(self):
@@ -79,11 +91,29 @@ class Simulation(object):
         data_history["prtfl_valtn"] = pd.DataFrame()
         data_history["asset_props"] = pd.DataFrame()
 
-        self._params["return_lower_qntl"] = 0.7
-        self._params["reblncng_intrvl_day"] = 28
-        trigger = Trigger(RegularBasis(**self._params))
-        problem = RiskMinimization(**self._params)
-        solver = Solver(EqualProportion(**self._params))
+        # Set a trigger class and a trigger algorithm class.
+        if self._trigger_class == "regular_basis":
+            trigger = Trigger(RegularBasis(**self._params))
+        else:
+            message = f"Invalid value for 'self._trigger_class': {self._trigger_class}." \
+                      f"'self._trigger_class' must be in ['identical_distribution_test', 'regular_basis']."
+            raise ValueError(message)
+
+        # Set a problem class.
+        if self._problem_class == "risk_minimization":
+            problem = RiskMinimization(**self._params)
+        else:
+            message = f"Invalid value for 'self._problem_class': {self._problem_class}." \
+                      f"'self._problem_class' must be in ['risk_minimization', 'sharp_ratio_maximization']."
+            raise ValueError(message)
+
+        # Set a solver class and a solver algorithm class.
+        if self._solver_class == "equal_proportion":
+            solver = Solver(EqualProportion(**self._params))
+        else:
+            message = f"Invalid value for 'self._solver_class': {self._solver_class}." \
+                      f"'self._solver_class' must be in ['mathematical_programming', 'equal_proportion']."
+            raise ValueError(message)
 
         # Set objects for the simulation.
         prev_prices = None
