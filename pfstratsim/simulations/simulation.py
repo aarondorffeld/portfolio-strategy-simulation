@@ -27,31 +27,40 @@ class Simulation(object):
     end_time : Timestamp
         The end time for the simulation.
 
+    init_prtfl_valtn : float, default 100.0
+        The initial valuation of the portfolio.
+
+    window_day : int, default 28
+        The number of days to specify the population.
+
+    min_reblncng_intrvl_day : int, default 1
+        The minimum interval for rebalancing.
+
     params : dict
         The other parameters of the trigger, the problem and the solver.
     """
-    def __init__(self, prices, start_time, end_time, **params):
+    def __init__(self, prices, start_time, end_time, init_prtfl_valtn=100.0,
+                 window_day=28, min_reblncng_intrvl_day=1, **params):
         self._prices = prices
         self._start_time = start_time
         self._end_time = end_time
+        self._init_prtfl_valtn = init_prtfl_valtn
+        self._window_day = window_day
+        self._min_reblncng_intrvl_day = min_reblncng_intrvl_day
+        self._params = params
 
     def execute(self):
         """Execute the simulation."""
-        init_prtfl_valtn = 100.0
-        window_day = 28
-        min_reblncng_intrvl_day = 1
-
-        params = {}
-        params["reblncng_intrvl_day"] = 28
-        params["return_lower_qntl"] = 0.7
-        trigger = Trigger(RegularBasis(**params))
-        problem = RiskMinimization(**params)
-        solver = Solver(EqualProportion(**params))
+        self._params["return_lower_qntl"] = 0.7
+        self._params["reblncng_intrvl_day"] = 28
+        trigger = Trigger(RegularBasis(**self._params))
+        problem = RiskMinimization(**self._params)
+        solver = Solver(EqualProportion(**self._params))
 
         # Set objects for the simulation.
         prev_prices = None
         reblncng_time_list = []
-        window = timedelta(days=window_day)
+        window = timedelta(days=self._window_day)
         crnt_time = self._start_time + window
         # Execute the simulation.
         while crnt_time <= self._end_time:
@@ -67,15 +76,15 @@ class Simulation(object):
             # Assess the necessity of rebalancing.
             is_reblncng = trigger.assess(crnt_time=crnt_time, reblncng_time_list=reblncng_time_list)
             if not is_reblncng:
-                crnt_time += timedelta(days=min_reblncng_intrvl_day)
+                crnt_time += timedelta(days=self._min_reblncng_intrvl_day)
                 continue
 
             print(f"*** {crnt_time} ***")
             if len(reblncng_time_list) == 0:  # For the first time
                 # Set the initial portfolio valuation and store them.
-                prtfl_expctd_valtn = pd.DataFrame([init_prtfl_valtn], index=[crnt_time], columns=["prtfl_expctd_valtn"])
-                prtfl_obsrvd_valtn = pd.DataFrame([init_prtfl_valtn], index=[crnt_time], columns=["prtfl_obsrvd_valtn"])
-                prtfl_valtn = pd.DataFrame([init_prtfl_valtn], index=[crnt_time], columns=["prtfl_valtn"])
+                prtfl_expctd_valtn = pd.DataFrame([self._init_prtfl_valtn], index=[crnt_time], columns=["prtfl_expctd_valtn"])
+                prtfl_obsrvd_valtn = pd.DataFrame([self._init_prtfl_valtn], index=[crnt_time], columns=["prtfl_obsrvd_valtn"])
+                prtfl_valtn = pd.DataFrame([self._init_prtfl_valtn], index=[crnt_time], columns=["prtfl_valtn"])
             else:  # For the other times
                 # Calculate expected values and store them.
                 # For the assets
@@ -117,4 +126,4 @@ class Simulation(object):
             prev_prices = crnt_prices.copy()
             prev_asset_valtns = asset_valtns_reblncd.copy()
             prev_prtfl_valtn = prtfl_valtn.copy()
-            crnt_time += timedelta(days=min_reblncng_intrvl_day)
+            crnt_time += timedelta(days=self._min_reblncng_intrvl_day)
