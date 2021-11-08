@@ -21,13 +21,15 @@ def main():
     sim = Simulation(
         trigger_class="regular_basis",
         problem_class="risk_minimization",
-        solver_class="equal_proportion",
+        solver_class="mathematical_programming",
         prices=prices,
         start_time=start_time,
         end_time=end_time,
         result_dir=result_dir,
         return_lower_qntl=0.7,
         reblncng_intrvl_day=28,
+        solver_name="baron",
+        max_time_limit=2,
     )
     sim.execute()
 
