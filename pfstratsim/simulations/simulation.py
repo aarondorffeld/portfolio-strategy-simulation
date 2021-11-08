@@ -6,7 +6,7 @@ import joblib
 import warnings
 
 from ..problems import RiskMinimization
-from ..solvers import Solver, EqualProportion
+from ..solvers import Solver, EqualProportion, MathematicalProgramming
 from ..triggers import Trigger, RegularBasis
 from ..utils import calc_asset_obsrvd_returns, calc_asset_obsrvd_risks, calc_prtfl_obsrvd_return, calc_prtfl_obsrvd_risk
 
@@ -53,6 +53,9 @@ class Simulation(object):
     """
     def __init__(self, trigger_class, problem_class, solver_class, prices, start_time, end_time, init_prtfl_valtn=100.0,
                  window_day=28, min_reblncng_intrvl_day=1, result_dir=".", **params):
+        self._trigger_class = trigger_class
+        self._problem_class = problem_class
+        self._solver_class = solver_class
         self._prices = prices
         self._start_time = start_time
         self._end_time = end_time
@@ -60,9 +63,6 @@ class Simulation(object):
         self._window_day = window_day
         self._min_reblncng_intrvl_day = min_reblncng_intrvl_day
         self._result_dir = result_dir
-        self._trigger_class = trigger_class
-        self._problem_class = problem_class
-        self._solver_class = solver_class
         self._params = params
 
     def execute(self):
@@ -110,6 +110,8 @@ class Simulation(object):
         # Set a solver class and a solver algorithm class.
         if self._solver_class == "equal_proportion":
             solver = Solver(EqualProportion(**self._params))
+        elif self._solver_class == "mathematical_programming":
+            solver = Solver(MathematicalProgramming(**self._params))
         else:
             message = f"Invalid value for 'self._solver_class': {self._solver_class}." \
                       f"'self._solver_class' must be in ['mathematical_programming', 'equal_proportion']."
@@ -138,6 +140,7 @@ class Simulation(object):
                 continue
 
             print(f"*** {crnt_time} ***")
+            data_history_backup = data_history.copy()  # Make a backup for when the solver fails to find any solutions.
             if len(reblncng_time_list) == 0:  # For the first time
                 # Set the initial portfolio valuation and store them.
                 prtfl_expctd_valtn = pd.DataFrame([self._init_prtfl_valtn], index=[crnt_time], columns=["prtfl_expctd_valtn"])
@@ -195,7 +198,11 @@ class Simulation(object):
             problem.define(crnt_prices, crnt_time)
 
             # Calculate the asset proportions and the asset valuations after rebalancing and store them.
-            solver.solve(problem)
+            is_success = solver.solve(problem, **self._params)
+            if is_success == False:
+                data_history = data_history_backup  # Restore data_history because some changes have happened to it at this point.
+                crnt_time += timedelta(days=self._min_reblncng_intrvl_day)
+                continue
             asset_valtns_reblncd = prtfl_valtn.iloc[0, 0] * solver.asset_props_
             data_history["asset_props"] = pd.concat([data_history["asset_props"], solver.asset_props_], axis=0)
             data_history["asset_valtns_reblncd"] = pd.concat([data_history["asset_valtns_reblncd"], asset_valtns_reblncd], axis=0)

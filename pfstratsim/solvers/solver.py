@@ -44,27 +44,28 @@ class Solver(object):
         params : dict
             The other parameters of the solver algorithm.
         """
-        self._cncrt_solver.solve(problem, **params)
-
-        model = problem.cncrt_model_
-        self._asset_props_ = pd.DataFrame(
-            [value(model.asset_props[a]) for a in range(len(problem.asset_name_list_))],
-            index=problem.asset_name_list_, columns=[problem.crnt_time_]
-        ).T
-        self._asset_expctd_returns_ = pd.DataFrame(
-            [value(model.asset_expctd_returns[a]) for a in range(len(problem.asset_name_list_))],
-            index=problem.asset_name_list_, columns=[problem.crnt_time_]
-        ).T
-        self._asset_expctd_risks_ = pd.DataFrame(
-            [value(model.asset_expctd_risks[a]) for a in range(len(problem.asset_name_list_))],
-            index=problem.asset_name_list_, columns=[problem.crnt_time_]
-        ).T
-        self._prtfl_expctd_return_ = pd.DataFrame(
-            [value(model.prtfl_expctd_return)], index=[problem.crnt_time_], columns=['prtfl_expctd_return']
-        )
-        self._prtfl_expctd_risk_ = pd.DataFrame(
-            [value(model.prtfl_expctd_risk)], index=[problem.crnt_time_], columns=['prtfl_expctd_risk']
-        )
+        is_success = self._cncrt_solver.solve(problem, **params)
+        if is_success:
+            model = problem.cncrt_model_
+            self._asset_props_ = pd.DataFrame(
+                [value(model.asset_props[a]) for a in range(len(problem.asset_name_list_))],
+                index=problem.asset_name_list_, columns=[problem.crnt_time_]
+            ).T
+            self._asset_expctd_returns_ = pd.DataFrame(
+                [value(model.asset_expctd_returns[a]) for a in range(len(problem.asset_name_list_))],
+                index=problem.asset_name_list_, columns=[problem.crnt_time_]
+            ).T
+            self._asset_expctd_risks_ = pd.DataFrame(
+                [value(model.asset_expctd_risks[a]) for a in range(len(problem.asset_name_list_))],
+                index=problem.asset_name_list_, columns=[problem.crnt_time_]
+            ).T
+            self._prtfl_expctd_return_ = pd.DataFrame(
+                [value(model.prtfl_expctd_return)], index=[problem.crnt_time_], columns=['prtfl_expctd_return']
+            )
+            self._prtfl_expctd_risk_ = pd.DataFrame(
+                [value(model.prtfl_expctd_risk)], index=[problem.crnt_time_], columns=['prtfl_expctd_risk']
+            )
+        return is_success
 
     @property
     def asset_props_(self):
