@@ -57,6 +57,9 @@ class EqualProportion(SolverInterface):
         model.prtfl_expctd_risk = np.sqrt(prtfl_expctd_var)
 
         comp_time = time.perf_counter() - start_time
+
+        is_success = True
+
         if is_print:
             print(f'computation time = {comp_time}')
             print(f'portfolio risk = {value(model.prtfl_expctd_risk) * 100}[%]')
@@ -65,3 +68,5 @@ class EqualProportion(SolverInterface):
 
             for a, asset_name in enumerate(problem.asset_name_list):
                 print(f'{asset_name}: {value(model.asset_props[a]) * 100}[%]')
+
+        return is_success
