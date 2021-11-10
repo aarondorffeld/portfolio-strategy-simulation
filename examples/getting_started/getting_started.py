@@ -19,7 +19,7 @@ def main():
 
     result_dir = os.path.join(os.path.dirname(os.path.normpath(__file__)), "results", "risk_ep")
     sim = Simulation(
-        trigger_class="regular_basis",
+        trigger_class="identical_distribution_test",
         problem_class="risk_minimization",
         solver_class="mathematical_programming",
         prices=prices,
