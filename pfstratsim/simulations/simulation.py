@@ -7,7 +7,7 @@ import warnings
 
 from ..problems import RiskMinimization
 from ..solvers import Solver, EqualProportion, MathematicalProgramming
-from ..triggers import Trigger, RegularBasis
+from ..triggers import Trigger, RegularBasis, IdenticalDistributionTest
 from ..utils import calc_asset_obsrvd_returns, calc_asset_obsrvd_risks, calc_prtfl_obsrvd_return, calc_prtfl_obsrvd_risk
 
 warnings.filterwarnings("ignore")
@@ -91,9 +91,13 @@ class Simulation(object):
         data_history["prtfl_valtn"] = pd.DataFrame()
         data_history["asset_props"] = pd.DataFrame()
 
+        data_history["idntcl_dstrbtn_prob"] = pd.DataFrame()
+
         # Set a trigger class and a trigger algorithm class.
         if self._trigger_class == "regular_basis":
             trigger = Trigger(RegularBasis(**self._params))
+        elif self._trigger_class == "identical_distribution_test":
+            trigger = Trigger(IdenticalDistributionTest(**self._params))
         else:
             message = f"Invalid value for 'self._trigger_class': {self._trigger_class}." \
                       f"'self._trigger_class' must be in ['identical_distribution_test', 'regular_basis']."
@@ -133,8 +137,15 @@ class Simulation(object):
             latest_time = crnt_time - timedelta(days=1)  # -1 day due to unknown prices at the current date-time.
             crnt_prices = self._prices[oldest_time:latest_time]
 
-            # Assess the necessity of rebalancing.
-            is_reblncng = trigger.assess(crnt_time=crnt_time, reblncng_time_list=reblncng_time_list)
+            # Assess the necessity of rebalancing and store the identical distribution probabilities.
+            is_reblncng, idntcl_dstrbtn_prob = trigger.assess(
+                crnt_time=crnt_time,
+                crnt_prices=crnt_prices,
+                prev_prices=prev_prices,
+                reblncng_time_list=reblncng_time_list
+            )
+            data_history["idntcl_dstrbtn_prob"] = pd.concat([data_history["idntcl_dstrbtn_prob"], idntcl_dstrbtn_prob], axis=0)
+
             if not is_reblncng:
                 crnt_time += timedelta(days=self._min_reblncng_intrvl_day)
                 continue
@@ -246,3 +257,4 @@ class Simulation(object):
         data_history["asset_returns"].to_csv(os.path.join(self._result_dir, "asset_returns_history.csv"))
         data_history["prtfl_return"].to_csv(os.path.join(self._result_dir, "portfolio_return_history.csv"))
         data_history["asset_props"].to_csv(os.path.join(self._result_dir, "asset_proportion_history.csv"))
+        data_history["idntcl_dstrbtn_prob"].to_csv(os.path.join(self._result_dir, "identical_distribution_probability_history.csv"))

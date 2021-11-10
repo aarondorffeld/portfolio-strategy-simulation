@@ -30,7 +30,7 @@ def main():
     result_dir = os.path.join(os.path.dirname(os.path.normpath(__file__)), "results", f"risk_{solver_class_abrvtd}")
 
     sim = Simulation(
-        trigger_class="regular_basis",
+        trigger_class="identical_distribution_test",
         problem_class="risk_minimization",
         solver_class=solver_class,
         prices=prices,

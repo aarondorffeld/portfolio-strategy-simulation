@@ -39,9 +39,12 @@ class RegularBasis(TriggerInterface):
         -------
         is_reblncng : bool
             The necessity of rebalancing. If "True", it is necessary; else, it is unnecessary.
+
+        None : None
+            The object not to be used but necessary just for API consistency of the trigger algorithm classes.
         """
         if len(reblncng_time_list) > 0:
             is_reblncng = reblncng_time_list[-1] + timedelta(days=self._reblncng_intrvl_day) <= crnt_time
         else:
             is_reblncng = True
-        return is_reblncng
+        return is_reblncng, None

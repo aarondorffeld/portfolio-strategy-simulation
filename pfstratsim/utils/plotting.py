@@ -24,6 +24,7 @@ def plot(input_dir=".", output_dir="."):
     data_history = joblib.load(os.path.join(input_dir, "data_history"))
     prices = data_history["prices"]
     asset_name_list = prices.columns
+    idntcl_dstrbtn_prob_history = data_history["idntcl_dstrbtn_prob"]
     prtfl_expctd_value_history = data_history["prtfl_expctd_value"]
     prtfl_obsrvd_value_history = data_history["prtfl_obsrvd_value"]
     asset_returns_history = data_history["asset_returns"]
@@ -32,7 +33,7 @@ def plot(input_dir=".", output_dir="."):
     asset_props_history = data_history["asset_props"]
 
     # Set the common setting.
-    nrows = 9
+    nrows = 10
     fig, ax = plt.subplots(nrows=nrows, figsize=(20, 5 * nrows), sharex="col")
     args_expctd = {"marker": "o", "label": "expected", "color": "green", "alpha": 0.3}
     args_obsrvd = {"marker": "o", "label": "observed", "color": "blue"}
@@ -45,6 +46,11 @@ def plot(input_dir=".", output_dir="."):
     ax[i].set_title("The Prices")
     for asset in prices:
         ax[i].plot(prices[asset], label=asset)
+
+    i += 1
+    ax[i].set_title("The Identical Distribution Probabilities")
+    for asset in idntcl_dstrbtn_prob_history:
+        ax[i].plot(idntcl_dstrbtn_prob_history[asset], label=asset)
 
     i += 1
     ax[i].set_title("The Asset Proportions")
