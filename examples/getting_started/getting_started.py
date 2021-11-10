@@ -17,11 +17,22 @@ def main():
         interest_rate=0.0001,
     )
 
-    result_dir = os.path.join(os.path.dirname(os.path.normpath(__file__)), "results", "risk_ep")
+    solver_class = "mathematical_programming"
+    if solver_class == "equal_proportion":
+        solver_class_abrvtd = "ep"
+    elif solver_class == "mathematical_programming":
+        solver_class_abrvtd = "mp"
+    else:
+        message = f"Invalid value for 'self._solver_class': {solver_class}." \
+                  f"'self._solver_class' must be in ['mathematical_programming', 'equal_proportion']."
+        raise ValueError(message)
+
+    result_dir = os.path.join(os.path.dirname(os.path.normpath(__file__)), "results", f"risk_{solver_class_abrvtd}")
+
     sim = Simulation(
         trigger_class="regular_basis",
         problem_class="risk_minimization",
-        solver_class="mathematical_programming",
+        solver_class=solver_class,
         prices=prices,
         start_time=start_time,
         end_time=end_time,
