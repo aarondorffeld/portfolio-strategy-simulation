@@ -5,7 +5,7 @@ from datetime import timedelta
 import joblib
 import warnings
 
-from ..problems import RiskMinimization
+from ..problems import RiskMinimization, SharpeRatioMaximization
 from ..solvers import Solver, EqualProportion, MathematicalProgramming
 from ..triggers import Trigger, RegularBasis, IdenticalDistributionTest
 from ..utils import calc_asset_obsrvd_returns, calc_asset_obsrvd_risks, calc_prtfl_obsrvd_return, calc_prtfl_obsrvd_risk
@@ -106,6 +106,8 @@ class Simulation(object):
         # Set a problem class.
         if self._problem_class == "risk_minimization":
             problem = RiskMinimization(**self._params)
+        elif self._problem_class == "sharpe_ratio_maximization":
+            problem = SharpeRatioMaximization(**self._params)
         else:
             message = f"Invalid value for 'self._problem_class': {self._problem_class}." \
                       f"'self._problem_class' must be in ['risk_minimization', 'sharp_ratio_maximization']."
@@ -206,7 +208,11 @@ class Simulation(object):
                 data_history["prtfl_valtn"] = pd.concat([data_history["prtfl_valtn"], prtfl_valtn], axis=0)
 
             # Define a problem at the current date-time and solve the problem.
-            problem.define(crnt_prices, crnt_time)
+            is_success = problem.define(crnt_prices, crnt_time)
+            if is_success == False:
+                data_history = data_history_backup  # Restore data_history because some changes have happened to it at this point.
+                crnt_time += timedelta(days=self._min_reblncng_intrvl_day)
+                continue
 
             # Calculate the asset proportions and the asset valuations after rebalancing and store them.
             is_success = solver.solve(problem, **self._params)
