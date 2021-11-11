@@ -75,6 +75,8 @@ class Problem(object):
         self._reset(prices, crnt_time)
         self._build_abst_model()
         self._build_cncrt_model()
+        is_success = self._validate_model()
+        return is_success
 
     def _build_abst_model(self):
         """Build the abstract optimization model for the problem."""
@@ -110,6 +112,10 @@ class Problem(object):
         model.constr_sum_asset_props.add(sum(model.asset_props[a] for a in model.set_asset) == 1.0)
 
         self._cncrt_model_ = model
+
+    def _validate_model(self):
+        is_success = True
+        return is_success
 
     @property
     def cncrt_model_(self):
