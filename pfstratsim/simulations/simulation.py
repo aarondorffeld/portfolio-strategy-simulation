@@ -21,7 +21,7 @@ class Simulation(object):
     trigger_class : {"regular_basis", "identical_distribution_test"}
         The class of trigger used in the simulation.
 
-    problem_class : {"risk_minimization", "sharp_ratio_maximization"}
+    problem_class : {"risk_minimization", "sharpe_ratio_maximization"}
         The class of problem used in the simulation.
 
     solver_class : {"equal_proportion", "mathematical_programming}
@@ -110,7 +110,7 @@ class Simulation(object):
             problem = SharpeRatioMaximization(**self._params)
         else:
             message = f"Invalid value for 'self._problem_class': {self._problem_class}." \
-                      f"'self._problem_class' must be in ['risk_minimization', 'sharp_ratio_maximization']."
+                      f"'self._problem_class' must be in ['risk_minimization', 'sharpe_ratio_maximization']."
             raise ValueError(message)
 
         # Set a solver class and a solver algorithm class.
@@ -239,7 +239,7 @@ class Simulation(object):
         data_history["prtfl_expctd_value"]["lower"] = data_history["prtfl_expctd_return"]["prtfl_expctd_return"] - data_history["prtfl_expctd_risk"]["prtfl_expctd_risk"]
         data_history["prtfl_expctd_value"]["upper"] = data_history["prtfl_expctd_return"]["prtfl_expctd_return"] + data_history["prtfl_expctd_risk"]["prtfl_expctd_risk"]
         data_history["prtfl_expctd_value"]["risk"] = data_history["prtfl_expctd_risk"]["prtfl_expctd_risk"]
-        data_history["prtfl_expctd_value"]["sharp_ratio"] = data_history["prtfl_expctd_return"]["prtfl_expctd_return"] / data_history["prtfl_expctd_risk"]["prtfl_expctd_risk"]
+        data_history["prtfl_expctd_value"]["sharpe_ratio"] = data_history["prtfl_expctd_return"]["prtfl_expctd_return"] / data_history["prtfl_expctd_risk"]["prtfl_expctd_risk"]
         # For observed value
         data_history["prtfl_obsrvd_value"] = pd.DataFrame()
         data_history["prtfl_obsrvd_value"]["valtn"] = data_history["prtfl_obsrvd_valtn"]["prtfl_obsrvd_valtn"]
@@ -247,7 +247,7 @@ class Simulation(object):
         data_history["prtfl_obsrvd_value"]["lower"] = data_history["prtfl_obsrvd_return"]["prtfl_obsrvd_return"] - data_history["prtfl_obsrvd_risk"]["prtfl_obsrvd_risk"]
         data_history["prtfl_obsrvd_value"]["upper"] = data_history["prtfl_obsrvd_return"]["prtfl_obsrvd_return"] + data_history["prtfl_obsrvd_risk"]["prtfl_obsrvd_risk"]
         data_history["prtfl_obsrvd_value"]["risk"] = data_history["prtfl_obsrvd_risk"]["prtfl_obsrvd_risk"]
-        data_history["prtfl_obsrvd_value"]["sharp_ratio"] = data_history["prtfl_obsrvd_return"]["prtfl_obsrvd_return"] / data_history["prtfl_obsrvd_risk"]["prtfl_obsrvd_risk"]
+        data_history["prtfl_obsrvd_value"]["sharpe_ratio"] = data_history["prtfl_obsrvd_return"]["prtfl_obsrvd_return"] / data_history["prtfl_obsrvd_risk"]["prtfl_obsrvd_risk"]
         # Match the date-time indices of the expected values to the ones of the observed values
         data_history["prtfl_expctd_value"].index = data_history["prtfl_obsrvd_value"].index
 

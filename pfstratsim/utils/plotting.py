@@ -83,9 +83,9 @@ def plot(input_dir=".", output_dir="."):
     ax[i].plot(prtfl_obsrvd_value_history["valtn"], **args_obsrvd)
 
     i += 1
-    ax[i].set_title("The Portfolio Expected/Observed Sharp Ratio")
-    ax[i].plot(prtfl_expctd_value_history["sharp_ratio"], **args_expctd)
-    ax[i].plot(prtfl_obsrvd_value_history["sharp_ratio"], **args_obsrvd)
+    ax[i].set_title("The Portfolio Expected/Observed Sharpe Ratio")
+    ax[i].plot(prtfl_expctd_value_history["sharpe_ratio"], **args_expctd)
+    ax[i].plot(prtfl_obsrvd_value_history["sharpe_ratio"], **args_obsrvd)
 
     i += 1
     ax[i].set_title("The Portfolio Expected/Observed Return")

@@ -63,7 +63,7 @@ class MathematicalProgramming(SolverInterface):
             print(f'objective = {value(model.objctv)}')
             print(f'portfolio risk = {value(model.prtfl_expctd_risk) * 100}[%]')
             print(f'portfolio return = {value(model.prtfl_expctd_return) * 100}[%]')
-            print(f'sharp ratio = {value(model.prtfl_expctd_return) / value(model.prtfl_expctd_risk)}')
+            print(f'sharpe ratio = {value(model.prtfl_expctd_return) / value(model.prtfl_expctd_risk)}')
 
             for a, asset_name in enumerate(problem.asset_name_list_):
                 print(f'{asset_name}: {value(model.asset_props[a]) * 100}[%]')
