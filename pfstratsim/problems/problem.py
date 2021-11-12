@@ -71,6 +71,11 @@ class Problem(object):
 
         crnt_time : Timestamp
             The current date-time at which the problem is defined.
+
+        Returns
+        -------
+        is_success : bool
+            True if the problem is defined properly.
         """
         self._reset(prices, crnt_time)
         self._build_abst_model()
@@ -114,6 +119,13 @@ class Problem(object):
         self._cncrt_model_ = model
 
     def _validate_model(self):
+        """Validate the model if it is defined properly or not.
+
+        Returns
+        -------
+        is_success : bool
+            True if the problem is defined properly.
+        """
         is_success = True
         return is_success
 

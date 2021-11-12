@@ -43,6 +43,11 @@ class Solver(object):
 
         params : dict
             The other parameters of the solver algorithm.
+
+        Returns
+        -------
+        is_success : bool
+            True if the problem is solved properly.
         """
         is_success = self._cncrt_solver.solve(problem, **params)
         if is_success:

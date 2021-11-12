@@ -34,6 +34,11 @@ class EqualProportion(SolverInterface):
         params : dict
             The parameters not to be used in this class but necessary just to realize the API that can call this method
             of all the solver algorithm by one way.
+
+        Returns
+        -------
+        is_success : bool
+            True if the problem is solved properly.
         """
         model = problem.cncrt_model_
 
