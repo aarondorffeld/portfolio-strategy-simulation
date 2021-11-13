@@ -4,7 +4,6 @@ import warnings
 from .problem import Problem
 
 
-# TODO: reconsider a problem that cash is basically chosen 100% in the optimal solutions due to its standard deviaion of zero leading to its Sharpe ratio of positive infinity
 class SharpeRatioMaximization(Problem):
     """Problem to find a solution that maximizes the portfolio Sharpe ratio.
 

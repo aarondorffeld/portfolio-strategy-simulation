@@ -100,7 +100,7 @@ class Simulation(object):
             trigger = Trigger(IdenticalDistributionTest(**self._params))
         else:
             message = f"Invalid value for 'self._trigger_class': {self._trigger_class}." \
-                      f"'self._trigger_class' must be in ['identical_distribution_test', 'regular_basis']."
+                      f"'self._trigger_class' must be in ['regular_basis', 'identical_distribution_test']."
             raise ValueError(message)
 
         # Set a problem class.
@@ -120,7 +120,7 @@ class Simulation(object):
             solver = Solver(MathematicalProgramming(**self._params))
         else:
             message = f"Invalid value for 'self._solver_class': {self._solver_class}." \
-                      f"'self._solver_class' must be in ['mathematical_programming', 'equal_proportion']."
+                      f"'self._solver_class' must be in ['equal_proportion', 'mathematical_programming']."
             raise ValueError(message)
 
         # Set objects for the simulation.

@@ -34,7 +34,7 @@ def main():
         solver_class_abrvtd = "mp"
     else:
         message = f"Invalid value for 'self._solver_class': {solver_class}." \
-                  f"'self._solver_class' must be in ['mathematical_programming', 'equal_proportion']."
+                  f"'self._solver_class' must be in ['equal_proportion', 'mathematical_programming']."
         raise ValueError(message)
 
     result_dir = os.path.join(os.path.dirname(os.path.normpath(__file__)), "results", f"{problem_class_abrvtd}_{solver_class_abrvtd}")
