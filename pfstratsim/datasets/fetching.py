@@ -1,6 +1,7 @@
 import os
 
 import pandas as pd
+from pandas_datareader import data
 
 
 def load_sample_prices(asset_name_list, start_time, end_time, interest_rate=None, **params):
@@ -39,6 +40,53 @@ def load_sample_prices(asset_name_list, start_time, end_time, interest_rate=None
         sample_prices = _add_cash_data(sample_prices, interest_rate)
 
     return sample_prices
+
+
+def fetch_prices(asset_name_list, start_time, end_time, interest_rate=None, kind="Close", save_dir=".", **params):
+    """Load the historical prices of the arbitrary assets.
+
+    Parameters
+    ----------
+    asset_name_list : list of shape (num_assets) and str
+        The name list of the assets.
+
+    start_time : Timestamp
+        The start time for the simulation.
+
+    end_time : Timestamp
+        The end time for the simulation.
+
+    interest_rate : float, default None
+        The interest rate of cash.
+
+    kind : {"Open", "High", "Low", "Close"}, default "Close"
+        The kind of the prices.
+
+    save_dir : str, default "."
+        The directory of the historical prices of the assets.
+
+    params : dict
+        The parameters not to be used in this method but necessary just to realize the API that can call this method by
+        one way.
+
+    Returns
+    -------
+    prices : DataFrame of shape (num_times, num_assets) and float
+        The historical prices of the assets.
+    """
+    prices = pd.DataFrame()
+    for asset_name in asset_name_list:
+        all_data = data.DataReader(asset_name, "yahoo", start_time, end_time)
+        if save_dir is not None:
+            if os.path.exists(save_dir):
+                os.makedirs(save_dir)
+            all_data.to_csv(os.path.join(save_dir, f"{asset_name}.csv"))
+        prices[asset_name] = all_data[kind]
+
+    if interest_rate is not None:
+        prices = _add_cash_data(prices, interest_rate)
+
+    return prices
 
 
 def _add_cash_data(prices, interest_rate):
