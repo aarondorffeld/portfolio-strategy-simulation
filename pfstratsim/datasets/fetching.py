@@ -78,7 +78,7 @@ def fetch_prices(asset_name_list, start_time, end_time, interest_rate=None, kind
     for asset_name in asset_name_list:
         all_data = data.DataReader(asset_name, "yahoo", start_time, end_time)
         if save_dir is not None:
-            if os.path.exists(save_dir):
+            if not os.path.exists(save_dir):
                 os.makedirs(save_dir)
             all_data.to_csv(os.path.join(save_dir, f"{asset_name}.csv"))
         prices[asset_name] = all_data[kind]
