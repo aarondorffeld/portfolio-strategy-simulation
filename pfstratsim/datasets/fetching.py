@@ -4,7 +4,7 @@ from pandas_datareader import data
 from datetime import timedelta
 
 
-def load_sample_prices(asset_name_list, start_time, end_time, interest_rate=None, **params):
+def load_sample_prices(asset_name_list, start_time, end_time, window_day=None, interest_rate=None, **params):
     """Load the historical prices of the sample assets.
 
     Parameters
@@ -18,6 +18,9 @@ def load_sample_prices(asset_name_list, start_time, end_time, interest_rate=None
     end_time=None : Timestamp
         The end time for the simulation.
 
+    window_day : int, default=None
+        The number of days to specify the population.
+
     interest_rate=None : float, default None
         The interest rate of cash.
 
@@ -30,6 +33,9 @@ def load_sample_prices(asset_name_list, start_time, end_time, interest_rate=None
     sample_prices : DataFrame of shape (num_times, num_assets) and float
         The historical prices of the assets.
     """
+    if window_day is not None:
+        start_time -= timedelta(days=window_day)
+
     data_dir = os.path.join(os.path.dirname(os.path.normpath(__file__)), "data")
     sample_prices = pd.DataFrame()
     for asset_name in asset_name_list:
@@ -42,7 +48,7 @@ def load_sample_prices(asset_name_list, start_time, end_time, interest_rate=None
     return sample_prices
 
 
-def fetch_prices(asset_name_list, start_time, end_time=None, interest_rate=None, kind="Close", save_dir=".",
+def fetch_prices(asset_name_list, start_time, end_time=None, window_day=None, interest_rate=None, kind="Close", save_dir=".",
                  is_save_each=True, is_save_all=True, save_file_name="all_assets_prices", **params):
     """Load the historical prices of the arbitrary assets.
 
@@ -56,6 +62,9 @@ def fetch_prices(asset_name_list, start_time, end_time=None, interest_rate=None,
 
     end_time : Timestamp, default=None
         The end time for the simulation.
+
+    window_day : int, default=None
+        The number of days to specify the population.
 
     interest_rate : float, default None
         The interest rate of cash.
@@ -84,6 +93,8 @@ def fetch_prices(asset_name_list, start_time, end_time=None, interest_rate=None,
     prices : DataFrame of shape (num_times, num_assets) and float
         The historical prices of the assets.
     """
+    if window_day is not None:
+        start_time -= timedelta(days=window_day)
     start_time += timedelta(days=1)
     prices = pd.DataFrame()
     for asset_name in asset_name_list:

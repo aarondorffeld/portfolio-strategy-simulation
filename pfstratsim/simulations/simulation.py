@@ -127,7 +127,7 @@ class Simulation(object):
         prev_prices = None
         reblncng_time_list = []
         window = timedelta(days=self._window_day)
-        crnt_time = self._start_time + window
+        crnt_time = self._start_time
         # Execute the simulation.
         while crnt_time <= self._end_time:
             # Ignore date-times that are not included in the prices' date-times.
