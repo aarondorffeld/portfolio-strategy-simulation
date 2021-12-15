@@ -56,7 +56,7 @@ def plot(input_dir=".", output_dir="."):
     ax[i].set_title("The Asset Proportions")
     bottom = np.zeros(len(asset_props_history))
     for a, asset_name in enumerate(asset_name_list):
-        ax[i].bar(asset_props_history.index, asset_props_history[asset_name], bottom=bottom, width=10.0,
+        ax[i].bar(asset_props_history.index, asset_props_history[asset_name], bottom=bottom, width=1.0,
                   label=asset_name)
         bottom += np.array(asset_props_history.iloc[:, a])
 
@@ -64,7 +64,7 @@ def plot(input_dir=".", output_dir="."):
     ax[i].set_title("The Asset Valuations")
     bottom = np.zeros(len(asset_valtns_history))
     for a, asset_name in enumerate(asset_name_list):
-        ax[i].bar(asset_valtns_history.index, asset_valtns_history[asset_name], bottom=bottom, width=10.0,
+        ax[i].bar(asset_valtns_history.index, asset_valtns_history[asset_name], bottom=bottom, width=1.0,
                   label=asset_name)
         bottom += np.array(asset_valtns_history.iloc[:, a])
 
