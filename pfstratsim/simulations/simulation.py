@@ -150,89 +150,76 @@ class Simulation(object):
 
             if len(reblncng_time_list) == 0:  # For the first time
                 # Set the initial portfolio valuation and store them.
-                prtfl_expctd_valtn = pd.DataFrame([self._init_prtfl_valtn], index=[crnt_time], columns=["prtfl_expctd_valtn"])
-                prtfl_obsrvd_valtn = pd.DataFrame([self._init_prtfl_valtn], index=[crnt_time], columns=["prtfl_obsrvd_valtn"])
                 prtfl_valtn = pd.DataFrame([self._init_prtfl_valtn], index=[crnt_time], columns=["prtfl_valtn"])
-                data_history["prtfl_expctd_valtn"] = pd.concat([data_history["prtfl_expctd_valtn"], prtfl_expctd_valtn], axis=0)
-                data_history["prtfl_obsrvd_valtn"] = pd.concat([data_history["prtfl_obsrvd_valtn"], prtfl_obsrvd_valtn], axis=0)
-                data_history["prtfl_valtn"] = pd.concat([data_history["prtfl_valtn"], prtfl_valtn], axis=0)
-            else:  # For the other times
-                # Calculate expected values and store them.
-                prev_time = crnt_time - timedelta(days=self._min_reblncng_intrvl_day)
-                # For the assets
-                asset_expctd_valtns = pd.DataFrame(np.array(prev_asset_valtns) * np.array(1 + solver.asset_expctd_returns_), index=solver.asset_expctd_returns_.index, columns=solver.asset_expctd_returns_.columns)
-                data_history["asset_expctd_returns"] = pd.concat([data_history["asset_expctd_returns"], solver.asset_expctd_returns_], axis=0)
-                data_history["asset_expctd_risks"] = pd.concat([data_history["asset_expctd_risks"], solver.asset_expctd_risks_], axis=0)
-                data_history["asset_expctd_valtns"] = pd.concat([data_history["asset_expctd_valtns"], asset_expctd_valtns], axis=0)
-                data_history["asset_expctd_returns"] = edit_index(data_history["asset_expctd_returns"], -1, prev_time)
-                data_history["asset_expctd_risks"] = edit_index(data_history["asset_expctd_risks"], -1, prev_time)
-                data_history["asset_expctd_valtns"] = edit_index(data_history["asset_expctd_valtns"], -1, prev_time)
-                # For the portfolio
-                prtfl_expctd_valtn = pd.DataFrame(np.array(prev_prtfl_valtn) * np.array(1 + solver.prtfl_expctd_return_), index=solver.prtfl_expctd_return_.index, columns=["prtfl_expctd_valtn"])
-                data_history["prtfl_expctd_return"] = pd.concat([data_history["prtfl_expctd_return"], solver.prtfl_expctd_return_], axis=0)
-                data_history["prtfl_expctd_risk"] = pd.concat([data_history["prtfl_expctd_risk"], solver.prtfl_expctd_risk_], axis=0)
-                data_history["prtfl_expctd_valtn"] = pd.concat([data_history["prtfl_expctd_valtn"], prtfl_expctd_valtn], axis=0)
-                data_history["prtfl_expctd_return"] = edit_index(data_history["prtfl_expctd_return"], -1, prev_time)
-                data_history["prtfl_expctd_risk"] = edit_index(data_history["prtfl_expctd_risk"], -1, prev_time)
-                data_history["prtfl_expctd_valtn"] = edit_index(data_history["prtfl_expctd_valtn"], -1, prev_time)
 
-                # Calculate the observed values and store them.
-                # Common setting
-                prev_crnt_prices = self._prices[reblncng_time_list[-1]:latest_time]
-                kwargs = {"prices": prev_crnt_prices, "index": [crnt_time]}
-                # For the assets
-                asset_obsrvd_returns = calc_asset_obsrvd_returns(**kwargs)
-                asset_obsrvd_risks = calc_asset_obsrvd_risks(**kwargs)
-                asset_obsrvd_valtns = pd.DataFrame(np.array(prev_asset_valtns) * np.array(1 + asset_obsrvd_returns), index=[crnt_time], columns=prev_asset_valtns.columns)
-                data_history["asset_obsrvd_returns"] = pd.concat([data_history["asset_obsrvd_returns"], asset_obsrvd_returns], axis=0)
-                data_history["asset_obsrvd_risks"] = pd.concat([data_history["asset_obsrvd_risks"], asset_obsrvd_risks], axis=0)
-                data_history["asset_obsrvd_valtns"] = pd.concat([data_history["asset_obsrvd_valtns"], asset_obsrvd_valtns], axis=0)
-                # For the portfolio
-                prtfl_obsrvd_return = calc_prtfl_obsrvd_return(asset_props=solver.asset_props_, columns=["prtfl_obsrvd_return"], **kwargs)
-                prtfl_obsrvd_risk = calc_prtfl_obsrvd_risk(asset_props=solver.asset_props_, columns=["prtfl_obsrvd_risk"], **kwargs)
-                prtfl_obsrvd_valtn = pd.DataFrame(np.array(prev_prtfl_valtn) * np.array(1 + prtfl_obsrvd_return), index=[crnt_time], columns=["prtfl_obsrvd_valtn"])
-                data_history["prtfl_obsrvd_return"] = pd.concat([data_history["prtfl_obsrvd_return"], prtfl_obsrvd_return], axis=0)
-                data_history["prtfl_obsrvd_risk"] = pd.concat([data_history["prtfl_obsrvd_risk"], prtfl_obsrvd_risk], axis=0)
-                data_history["prtfl_obsrvd_valtn"] = pd.concat([data_history["prtfl_obsrvd_valtn"], prtfl_obsrvd_valtn], axis=0)
+            if is_reblncng:
+                print(f"*** {crnt_time} ***")
+                # Define a problem at the current date-time and solve the problem.
+                is_success = problem.define(crnt_prices, crnt_time)
+                if is_success:
+                    # Calculate the asset proportions and the asset valuations after rebalancing and store them.
+                    is_success = solver.solve(problem, **self._params)
+                    if is_success:
+                        asset_valtns_reblncd = prtfl_valtn.iloc[0, 0] * solver.asset_props_
+                        data_history["asset_props"] = pd.concat([data_history["asset_props"], solver.asset_props_], axis=0)
+                        data_history["asset_valtns_reblncd"] = pd.concat([data_history["asset_valtns_reblncd"], asset_valtns_reblncd], axis=0)
 
-                # Calculate performance and store thme.
-                # For the assets
-                asset_returns = calc_asset_obsrvd_returns(prices=prev_crnt_prices.iloc[[0, -1], :], frequency=1, index=[crnt_time])
-                asset_valtns = pd.DataFrame(np.array(prev_asset_valtns) * np.array(1 + asset_returns), index=[crnt_time], columns=prev_asset_valtns.columns)
-                data_history["asset_returns"] = pd.concat([data_history["asset_returns"], asset_returns], axis=0)
-                data_history["asset_valtns"] = pd.concat([data_history["asset_valtns"], asset_valtns], axis=0)
-                # For the portfolio
-                #prtfl_return = pd.DataFrame([(np.array(prev_asset_valtns) * np.array(asset_returns)).sum().sum() / prev_asset_valtns.sum().sum()], index=[crnt_time], columns=["prtfl_return"])
-                prtfl_return = pd.DataFrame([(asset_valtns.sum().sum() - prev_asset_valtns.sum().sum()) / prev_asset_valtns.sum().sum()], index=[crnt_time], columns=["prtfl_return"])
-                prtfl_valtn = pd.DataFrame(np.array(prev_prtfl_valtn) * np.array(1 + prtfl_return), index=[crnt_time], columns=prtfl_valtn.columns)
-                data_history["prtfl_return"] = pd.concat([data_history["prtfl_return"], prtfl_return], axis=0)
-                data_history["prtfl_valtn"] = pd.concat([data_history["prtfl_valtn"], prtfl_valtn], axis=0)
+                        # Store and back up some information for the next date-time.
+                        reblncng_time_list.append(crnt_time)
+                        prev_prices = crnt_prices.copy()
+                        prev_asset_valtns = asset_valtns_reblncd.copy()
+                        prev_prtfl_valtn = prtfl_valtn.copy()
 
-            if not is_reblncng:
-                crnt_time += timedelta(days=self._min_reblncng_intrvl_day)
-                continue
+            # Calculate expected values and store them.
+            # For the assets
+            asset_expctd_valtns = pd.DataFrame(np.array(asset_valtns_reblncd) * np.array(1 + solver.asset_expctd_returns_), index=solver.asset_expctd_returns_.index, columns=solver.asset_expctd_returns_.columns)
+            data_history["asset_expctd_returns"] = pd.concat([data_history["asset_expctd_returns"], solver.asset_expctd_returns_], axis=0)
+            data_history["asset_expctd_risks"] = pd.concat([data_history["asset_expctd_risks"], solver.asset_expctd_risks_], axis=0)
+            data_history["asset_expctd_valtns"] = pd.concat([data_history["asset_expctd_valtns"], asset_expctd_valtns], axis=0)
+            data_history["asset_expctd_returns"] = edit_index(data_history["asset_expctd_returns"], -1, crnt_time)
+            data_history["asset_expctd_risks"] = edit_index(data_history["asset_expctd_risks"], -1, crnt_time)
+            data_history["asset_expctd_valtns"] = edit_index(data_history["asset_expctd_valtns"], -1, crnt_time)
+            # For the portfolio
+            prtfl_expctd_valtn = pd.DataFrame(np.array(prev_prtfl_valtn) * np.array(1 + solver.prtfl_expctd_return_), index=solver.prtfl_expctd_return_.index, columns=["prtfl_expctd_valtn"])
+            data_history["prtfl_expctd_return"] = pd.concat([data_history["prtfl_expctd_return"], solver.prtfl_expctd_return_], axis=0)
+            data_history["prtfl_expctd_risk"] = pd.concat([data_history["prtfl_expctd_risk"], solver.prtfl_expctd_risk_], axis=0)
+            data_history["prtfl_expctd_valtn"] = pd.concat([data_history["prtfl_expctd_valtn"], prtfl_expctd_valtn], axis=0)
+            data_history["prtfl_expctd_return"] = edit_index(data_history["prtfl_expctd_return"], -1, crnt_time)
+            data_history["prtfl_expctd_risk"] = edit_index(data_history["prtfl_expctd_risk"], -1, crnt_time)
+            data_history["prtfl_expctd_valtn"] = edit_index(data_history["prtfl_expctd_valtn"], -1, crnt_time)
 
-            print(f"*** {crnt_time} ***")
-            # Define a problem at the current date-time and solve the problem.
-            is_success = problem.define(crnt_prices, crnt_time)
-            if is_success == False:
-                crnt_time += timedelta(days=self._min_reblncng_intrvl_day)
-                continue
+            # Calculate the observed values and store them.
+            # Common setting
+            prev_crnt_prices = self._prices[reblncng_time_list[-1]:crnt_time]
+            kwargs = {"prices": prev_crnt_prices, "index": [latest_time]}
+            # For the assets
+            asset_obsrvd_returns = calc_asset_obsrvd_returns(**kwargs)
+            asset_obsrvd_risks = calc_asset_obsrvd_risks(**kwargs)
+            asset_obsrvd_valtns = pd.DataFrame(np.array(prev_asset_valtns) * np.array(1 + asset_obsrvd_returns), index=[latest_time], columns=prev_asset_valtns.columns)
+            data_history["asset_obsrvd_returns"] = pd.concat([data_history["asset_obsrvd_returns"], asset_obsrvd_returns], axis=0)
+            data_history["asset_obsrvd_risks"] = pd.concat([data_history["asset_obsrvd_risks"], asset_obsrvd_risks], axis=0)
+            data_history["asset_obsrvd_valtns"] = pd.concat([data_history["asset_obsrvd_valtns"], asset_obsrvd_valtns], axis=0)
+            # For the portfolio
+            prtfl_obsrvd_return = calc_prtfl_obsrvd_return(asset_props=solver.asset_props_, columns=["prtfl_obsrvd_return"], **kwargs)
+            prtfl_obsrvd_risk = calc_prtfl_obsrvd_risk(asset_props=solver.asset_props_, columns=["prtfl_obsrvd_risk"], **kwargs)
+            prtfl_obsrvd_valtn = pd.DataFrame(np.array(prev_prtfl_valtn) * np.array(1 + prtfl_obsrvd_return), index=[latest_time], columns=["prtfl_obsrvd_valtn"])
+            data_history["prtfl_obsrvd_return"] = pd.concat([data_history["prtfl_obsrvd_return"], prtfl_obsrvd_return], axis=0)
+            data_history["prtfl_obsrvd_risk"] = pd.concat([data_history["prtfl_obsrvd_risk"], prtfl_obsrvd_risk], axis=0)
+            data_history["prtfl_obsrvd_valtn"] = pd.concat([data_history["prtfl_obsrvd_valtn"], prtfl_obsrvd_valtn], axis=0)
 
-            # Calculate the asset proportions and the asset valuations after rebalancing and store them.
-            is_success = solver.solve(problem, **self._params)
-            if is_success == False:
-                crnt_time += timedelta(days=self._min_reblncng_intrvl_day)
-                continue
-            asset_valtns_reblncd = prtfl_valtn.iloc[0, 0] * solver.asset_props_
-            data_history["asset_props"] = pd.concat([data_history["asset_props"], solver.asset_props_], axis=0)
-            data_history["asset_valtns_reblncd"] = pd.concat([data_history["asset_valtns_reblncd"], asset_valtns_reblncd], axis=0)
+            # Calculate performance and store thme.
+            # For the assets
+            asset_returns = calc_asset_obsrvd_returns(prices=prev_crnt_prices.iloc[[0, -1], :], frequency=1, index=[latest_time])
+            asset_valtns = pd.DataFrame(np.array(prev_asset_valtns) * np.array(1 + asset_returns), index=[latest_time], columns=prev_asset_valtns.columns)
+            data_history["asset_returns"] = pd.concat([data_history["asset_returns"], asset_returns], axis=0)
+            data_history["asset_valtns"] = pd.concat([data_history["asset_valtns"], asset_valtns], axis=0)
+            # For the portfolio
+            #prtfl_return = pd.DataFrame([(np.array(prev_asset_valtns) * np.array(asset_returns)).sum().sum() / prev_asset_valtns.sum().sum()], index=[latest_time], columns=["prtfl_return"])
+            prtfl_return = pd.DataFrame([(asset_valtns.sum().sum() - prev_asset_valtns.sum().sum()) / prev_asset_valtns.sum().sum()], index=[latest_time], columns=["prtfl_return"])
+            prtfl_valtn = pd.DataFrame(np.array(prev_prtfl_valtn) * np.array(1 + prtfl_return), index=[latest_time], columns=prtfl_valtn.columns)
+            data_history["prtfl_return"] = pd.concat([data_history["prtfl_return"], prtfl_return], axis=0)
+            data_history["prtfl_valtn"] = pd.concat([data_history["prtfl_valtn"], prtfl_valtn], axis=0)
 
-            # Store and back up some information for the next date-time.
-            reblncng_time_list.append(crnt_time)
-            prev_prices = crnt_prices.copy()
-            prev_asset_valtns = asset_valtns_reblncd.copy()
-            prev_prtfl_valtn = prtfl_valtn.copy()
             crnt_time += timedelta(days=self._min_reblncng_intrvl_day)
 
         # Classify historical data to expected value and observed value.
