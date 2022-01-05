@@ -50,6 +50,20 @@ class Simulation(object):
 
     params : dict
         The other parameters of the trigger, the problem and the solver.
+
+    Attributes
+    ----------
+    _prev_prices_ : DataFrame of shape (num_times, num_assets) and float
+        The historical prices of the assets at the previous rebalancing timing.
+
+    _reblncng_time_list_ : list
+        The rebalancing timing list.
+
+    _prtfl_valtn_ : DataFrame of shape (num_times=1, num_prtfls=1) and float
+        The valuation of the portfolio.
+
+    _data_history_ : dict
+        The stored data history.
     """
     def __init__(self, trigger_class, problem_class, solver_class, prices, start_time, end_time, init_prtfl_valtn=100.0,
                  window_day=28, min_reblncng_intrvl_day=1, result_dir=".", **params):
@@ -65,33 +79,41 @@ class Simulation(object):
         self._result_dir = result_dir
         self._params = params
 
+        self._prev_prices_ = None
+        self._reblncng_time_list_ = []
+        self._prtfl_valtn_ = pd.DataFrame([self._init_prtfl_valtn], index=[self._start_time], columns=["prtfl_valtn"])
+        self._data_history_ = None
+
     def execute(self):
         """Execute the simulation."""
         # Prepare for storing historical data.
-        data_history = {}
-        data_history["prices"] = self._prices
-        data_history["asset_expctd_returns"] = pd.DataFrame()
-        data_history["asset_expctd_risks"] = pd.DataFrame()
-        data_history["asset_expctd_valtns"] = pd.DataFrame()
-        data_history["prtfl_expctd_return"] = pd.DataFrame()
-        data_history["prtfl_expctd_risk"] = pd.DataFrame()
-        data_history["prtfl_expctd_valtn"] = pd.DataFrame()
+        if self._data_history_ is None:
+            data_history = {}
+            data_history["prices"] = self._prices
+            data_history["asset_expctd_returns"] = pd.DataFrame()
+            data_history["asset_expctd_risks"] = pd.DataFrame()
+            data_history["asset_expctd_valtns"] = pd.DataFrame()
+            data_history["prtfl_expctd_return"] = pd.DataFrame()
+            data_history["prtfl_expctd_risk"] = pd.DataFrame()
+            data_history["prtfl_expctd_valtn"] = pd.DataFrame()
 
-        data_history["asset_obsrvd_returns"] = pd.DataFrame()
-        data_history["asset_obsrvd_risks"] = pd.DataFrame()
-        data_history["asset_obsrvd_valtns"] = pd.DataFrame()
-        data_history["prtfl_obsrvd_return"] = pd.DataFrame()
-        data_history["prtfl_obsrvd_risk"] = pd.DataFrame()
-        data_history["prtfl_obsrvd_valtn"] = pd.DataFrame()
+            data_history["asset_obsrvd_returns"] = pd.DataFrame()
+            data_history["asset_obsrvd_risks"] = pd.DataFrame()
+            data_history["asset_obsrvd_valtns"] = pd.DataFrame()
+            data_history["prtfl_obsrvd_return"] = pd.DataFrame()
+            data_history["prtfl_obsrvd_risk"] = pd.DataFrame()
+            data_history["prtfl_obsrvd_valtn"] = pd.DataFrame()
 
-        data_history["asset_returns"] = pd.DataFrame()
-        data_history["asset_valtns"] = pd.DataFrame()
-        data_history["asset_valtns_reblncd"] = pd.DataFrame()
-        data_history["prtfl_return"] = pd.DataFrame()
-        data_history["prtfl_valtn"] = pd.DataFrame()
-        data_history["asset_props"] = pd.DataFrame()
+            data_history["asset_returns"] = pd.DataFrame()
+            data_history["asset_valtns"] = pd.DataFrame()
+            data_history["asset_valtns_reblncd"] = pd.DataFrame()
+            data_history["prtfl_return"] = pd.DataFrame()
+            data_history["prtfl_valtn"] = pd.DataFrame()
+            data_history["asset_props"] = pd.DataFrame()
 
-        data_history["idntcl_dstrbtn_prob"] = pd.DataFrame()
+            data_history["idntcl_dstrbtn_prob"] = pd.DataFrame()
+        else:
+            data_history = self._data_history_
 
         # Set a trigger class and a trigger algorithm class.
         if self._trigger_class == "regular_basis":
@@ -124,8 +146,9 @@ class Simulation(object):
             raise ValueError(message)
 
         # Set objects for the simulation.
-        prev_prices = None
+        prev_prices = self._prev_prices_
         reblncng_time_list = []
+        prtfl_valtn = self._prtfl_valtn_
         window = timedelta(days=self._window_day)
         crnt_time = self._start_time
         # Execute the simulation.
@@ -147,10 +170,6 @@ class Simulation(object):
                 reblncng_time_list=reblncng_time_list
             )
             data_history["idntcl_dstrbtn_prob"] = pd.concat([data_history["idntcl_dstrbtn_prob"], idntcl_dstrbtn_prob], axis=0)
-
-            if len(reblncng_time_list) == 0:  # For the first time
-                # Set the initial portfolio valuation and store them.
-                prtfl_valtn = pd.DataFrame([self._init_prtfl_valtn], index=[crnt_time], columns=["prtfl_valtn"])
 
             if is_reblncng:
                 print(f"*** {crnt_time} ***")
@@ -253,6 +272,14 @@ class Simulation(object):
         data_history["prtfl_return"].to_csv(os.path.join(self._result_dir, "portfolio_return_history.csv"))
         data_history["asset_props"].to_csv(os.path.join(self._result_dir, "asset_proportion_history.csv"))
         data_history["idntcl_dstrbtn_prob"].to_csv(os.path.join(self._result_dir, "identical_distribution_probability_history.csv"))
+
+        # Update the simulation information to be used in the next simulation.
+        self._start_time = crnt_time
+        self._prtfl_valtn_ = prtfl_valtn.iloc[0, 0]
+        self._prev_prices_ = prev_prices
+        self._reblncng_time_list_ = reblncng_time_list
+        self._data_history_ = data_history
+        joblib.dump(self, os.path.join(self._result_dir, "sim"))
 
 
 def edit_index(data, edited_index, date_time):
