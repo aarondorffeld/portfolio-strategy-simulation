@@ -95,10 +95,10 @@ def fetch_prices(asset_name_list, start_time, end_time=None, window_day=None, in
     """
     if window_day is not None:
         start_time -= timedelta(days=window_day)
-    start_time += timedelta(days=1)
     prices = pd.DataFrame()
     for asset_name in asset_name_list:
         all_data = data.DataReader(asset_name, "yahoo", start_time, end_time)
+        all_data = all_data[start_time:end_time]  # extract data from start_time since DataReader fetches data from start_time - 1 day.
         if save_dir is not None:
             if not os.path.exists(save_dir):
                 os.makedirs(save_dir)
