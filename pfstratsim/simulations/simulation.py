@@ -188,6 +188,12 @@ class Simulation(object):
                         prev_prices = crnt_prices.copy()
                         prev_asset_valtns = asset_valtns_reblncd.copy()
                         prev_prtfl_valtn = prtfl_valtn.copy()
+                    else:
+                        crnt_time += timedelta(days=self._min_reblncng_intrvl_day)
+                        continue
+                else:
+                    crnt_time += timedelta(days=self._min_reblncng_intrvl_day)
+                    continue
 
             # Calculate expected values and store them.
             # For the assets
