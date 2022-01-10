@@ -47,6 +47,8 @@ def read_params(setting_file_dir=".", setting_file_name="."):
     solver_param_set = {
         "solver_class": str,
         "solver_name": str,
+        "is_print": bool,
+        "tee": bool,
         "max_time_limit": int,
     }
 
@@ -71,6 +73,8 @@ def read_params(setting_file_dir=".", setting_file_name="."):
                 params[param_name] = int(param_value)
             elif param_type == float:
                 params[param_name] = float(param_value)
+            elif param_type == bool:
+                params[param_name] = param_value == "True"
             elif param_type == str:
                 params[param_name] = str(param_value)
             elif param_type == pd.Timestamp:
