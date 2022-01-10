@@ -77,6 +77,10 @@ def main():
         crnt_prices=crnt_prices,
         prev_prices=prev_prices,
     )
+    if idntcl_dstrbtn_prob is None:
+        idntcl_dstrbtn_prob = pd.DataFrame([np.nan for _ in range(len(asset_name_list))], index=asset_name_list).T
+    idntcl_dstrbtn_prob.index = ['idntcl_dstrbtn_prob']
+    summary = idntcl_dstrbtn_prob.copy()
 
     # Store the main data
     shutil.copy2(os.path.join(crnt_dir, param_file_name), output_dir)
@@ -87,6 +91,7 @@ def main():
     joblib.dump(crnt_time, os.path.join(objects_dir, "crnt_time"))
     joblib.dump(crnt_prices, os.path.join(objects_dir, "crnt_prices"))
     joblib.dump(trigger, os.path.join(objects_dir, "trigger"))
+    joblib.dump(idntcl_dstrbtn_prob, os.path.join(objects_dir, "idntcl_dstrbtn_prob"))
 
     # Calculate the optimal asset proportions
     if is_reblncng:
@@ -96,9 +101,6 @@ def main():
             is_success = solver.solve(problem, **params)
             joblib.dump(solver, os.path.join(objects_dir, "solver"))
             if is_success:
-                if idntcl_dstrbtn_prob is None:
-                    idntcl_dstrbtn_prob = pd.DataFrame([np.nan for _ in range(len(asset_name_list))], index=asset_name_list).T
-                idntcl_dstrbtn_prob.index = ['idntcl_dstrbtn_prob']
                 asset_props = solver.asset_props_
                 asset_props.index = ['asset_props']
                 asset_valtns_reblncd = prtfl_valtn * asset_props
@@ -106,11 +108,9 @@ def main():
                 latest_prices = pd.DataFrame(crnt_prices.iloc[-1,:]).T
                 latest_prices.index = ['latest_prices']
                 asset_amounts = pd.DataFrame(asset_valtns_reblncd.values / latest_prices.values, index=['asset_amounts'], columns=asset_name_list)
-                summary = pd.concat([idntcl_dstrbtn_prob, asset_props, asset_valtns_reblncd, latest_prices, asset_amounts], axis=0)
+                summary = pd.concat([summary, asset_props, asset_valtns_reblncd, latest_prices, asset_amounts], axis=0)
 
                 # Store the main data
-                summary.to_csv(os.path.join(output_dir, "summary.csv"))
-                joblib.dump(idntcl_dstrbtn_prob, os.path.join(objects_dir, "idntcl_dstrbtn_prob"))
                 joblib.dump(asset_props, os.path.join(objects_dir, "asset_props"))
                 joblib.dump(asset_valtns_reblncd, os.path.join(objects_dir, "asset_valtns_reblncd"))
                 joblib.dump(latest_prices, os.path.join(objects_dir, "latest_prices"))
@@ -122,6 +122,9 @@ def main():
             print("Problem defining failed.")
     else:
         print("Rebalancing not necessary.")
+
+    # Store the main data
+    summary.to_csv(os.path.join(output_dir, "summary.csv"))
 
 
 def read_params(setting_file_dir=".", setting_file_name="."):
