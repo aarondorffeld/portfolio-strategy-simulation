@@ -183,6 +183,10 @@ class Simulation(object):
                         data_history["asset_valtns_reblncd"] = pd.concat([data_history["asset_valtns_reblncd"], asset_valtns_reblncd], axis=0)
 
                         # Store and back up some information for the next date-time.
+                        if len(reblncng_time_list) > 0:
+                            prev_reblncng_time = reblncng_time_list[-1]
+                        else:
+                            prev_reblncng_time = None
                         reblncng_time_list.append(crnt_time)
                         prev_prices = crnt_prices.copy()
                         prev_asset_valtns = asset_valtns_reblncd.copy()
@@ -213,8 +217,17 @@ class Simulation(object):
             data_history["prtfl_expctd_valtn"] = edit_index(data_history["prtfl_expctd_valtn"], -1, crnt_time)
 
             # Calculate the observed values and store them.
+            # For the fist time of rebalancing
+            if prev_reblncng_time is None:
+                crnt_time += timedelta(days=self._min_reblncng_intrvl_day)
+                continue
             # Common setting
-            prev_crnt_prices = self._prices[reblncng_time_list[-1]:crnt_time]
+            prev_crnt_prices = self._prices[prev_reblncng_time:crnt_time]
+            if len(prev_crnt_prices) <= 2:
+                message = f"With the number of price data ({len(prev_crnt_prices)}) less than or equal to 2, the" \
+                           "return covariances cannot be calculated. This causes failures in calculation of the" \
+                           "observed risks for the assets and the portfolio."
+                warnings.warn(message)
             kwargs = {"prices": prev_crnt_prices, "index": [crnt_time]}
             # For the assets
             asset_obsrvd_returns = calc_asset_obsrvd_returns(**kwargs)
