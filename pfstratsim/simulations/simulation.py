@@ -244,7 +244,7 @@ class Simulation(object):
             data_history["prtfl_obsrvd_risk"] = pd.concat([data_history["prtfl_obsrvd_risk"], prtfl_obsrvd_risk], axis=0)
             data_history["prtfl_obsrvd_valtn"] = pd.concat([data_history["prtfl_obsrvd_valtn"], prtfl_obsrvd_valtn], axis=0)
 
-            # Calculate performance and store thme.
+            # Calculate performance and store them.
             # For the assets
             asset_returns = calc_asset_obsrvd_returns(prices=prev_crnt_prices.iloc[[0, -1], :], frequency=1, index=[crnt_time])
             asset_valtns = pd.DataFrame(np.array(prev_asset_valtns) * np.array(1 + asset_returns), index=[crnt_time], columns=prev_asset_valtns.columns)

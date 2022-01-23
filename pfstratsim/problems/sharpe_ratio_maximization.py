@@ -30,7 +30,7 @@ class SharpeRatioMaximization(Problem):
         sense = maximize
         model.objctv = Objective(expr=expr, sense=sense)
 
-        # Set Constraints.s
+        # Set Constraints.
         model.constr_prtfl_expctd_risk = ConstraintList()
         model.constr_prtfl_expctd_risk.add(model.prtfl_expctd_risk ** 2 >=
             sum((model.asset_expctd_corr_cf[a, a1] * model.asset_expctd_risks[a] * model.asset_expctd_risks[a1] * model.asset_props[a] * model.asset_props[a1])
